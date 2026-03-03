@@ -18,7 +18,7 @@ root_dir = os.path.dirname(__file__)
 current_dir = root_dir
 dir_folders = []
 dir_files = []
-selection = 0
+selection = [0]
 
 def goto_dir(dir):
 	global current_dir, dir_folders, dir_files, selection
@@ -26,7 +26,6 @@ def goto_dir(dir):
 	current_dir = dir
 	dir_folders = []
 	dir_files = []
-	selection = 0
 
 	if root_dir != current_dir:
 		dir_folders.append('..')
@@ -42,24 +41,27 @@ def goto_dir(dir):
 def print_dir():
 	os.system('cls||clear')
 	print(f"{Color.yellow}{current_dir}{Color.end}")
+	# print(' -> '.join(str(x) for x in selection))
 
 	i = 0
 	files = [*dir_folders, *dir_files]
 	folders_len = len(dir_folders)
 
 	for i in range(0, len(files)):
-		print(f"{Color.hilight if selection == i else ''}{Color.green if i < folders_len else Color.blue}{files[i]}{Color.end}")
+		print(f"{Color.hilight if selection[-1] == i else ''}{Color.green if i < folders_len else Color.blue}{files[i]}{Color.end}")
 
 def select_option():
-	if selection < len(dir_folders):
-		if dir_folders[selection] == '..':
+	if selection[-1] < len(dir_folders):
+		if dir_folders[selection[-1]] == '..':
 			goto_dir(os.path.dirname(current_dir))
+			selection.pop()
 		else:
-			goto_dir(os.path.join(current_dir, dir_folders[selection]))
+			goto_dir(os.path.join(current_dir, dir_folders[selection[-1]]))
+			selection.append(0)
 	else:
 		os.system('cls||clear')
 		try:
-			exec(open(os.path.join(current_dir, dir_files[selection - len(dir_folders)])).read())
+			exec(open(os.path.join(current_dir, dir_files[selection[-1] - len(dir_folders)])).read())
 		except:
 			print(f"{Color.red}An error occured!{Color.end}")
 		input(f"{Color.red}Press any key to return{Color.end}")
@@ -68,12 +70,12 @@ def select_option():
 def slide_option(dir = 1):
 	global selection
 
-	selection += dir
+	selection[-1] += dir
 	length = len(dir_folders) + len(dir_files)
-	if selection < 0:
-		selection = length-1
-	elif selection >= length:
-		selection = 0
+	if selection[-1] < 0:
+		selection[-1] = length-1
+	elif selection[-1] >= length:
+		selection[-1] = 0
 		
 goto_dir(current_dir)
 print_dir()
