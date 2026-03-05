@@ -15,6 +15,7 @@ class Color(enum.Enum):
 		return self.value
 
 root_dir = os.path.dirname(__file__)
+display_skip_count = len(os.path.dirname(root_dir)) + 1
 current_dir = root_dir
 dir_folders = []
 dir_files = []
@@ -39,16 +40,19 @@ def goto_dir(dir):
 			dir_files.append(file)
 
 def print_dir():
-	os.system('cls||clear')
-	print(f"{Color.yellow}{current_dir}{Color.end}")
-	# print(' -> '.join(str(x) for x in selection))
+	print("\033[?25l\033[2J\033[H", end="")
 
-	i = 0
 	files = [*dir_folders, *dir_files]
 	folders_len = len(dir_folders)
 
+	hover_action = "open folder" if selection[-1] < len(dir_folders) else "run python task"
+	strss = []
+	strss.append(f"{Color.violet}[{selection[-1]+1}/{len(files)}] {Color.yellow}[Path: {current_dir[display_skip_count:]}] {Color.gray}[{hover_action}]{Color.end}")
+
 	for i in range(0, len(files)):
-		print(f"{Color.hilight if selection[-1] == i else ''}{Color.green if i < folders_len else Color.blue}{files[i]}{Color.end}")
+		strss.append(f"{Color.hilight if selection[-1] == i else ''}{Color.green if i < folders_len else Color.blue}{files[i]}{Color.end}")
+
+	print("\n".join(strss))
 
 def select_option():
 	if selection[-1] < len(dir_folders):
@@ -60,11 +64,14 @@ def select_option():
 			selection.append(0)
 	else:
 		os.system('cls||clear')
+		print("\033[?25h")
 		try:
 			exec(open(os.path.join(current_dir, dir_files[selection[-1] - len(dir_folders)])).read())
 		except:
 			print(f"{Color.red}An error occured!{Color.end}")
 		input(f"{Color.red}Press any key to return{Color.end}")
+		os.system('cls||clear')
+
 	print_dir()
 
 def slide_option(dir = 1):
