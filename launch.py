@@ -1,4 +1,4 @@
-import enum, os, msvcrt
+import enum, os, msvcrt, sys
 
 class Color(enum.Enum):
 	end    = '\33[0m'
@@ -66,7 +66,8 @@ def select_option():
 		os.system('cls||clear')
 		print("\033[?25h")
 		try:
-			exec(open(os.path.join(current_dir, dir_files[selection[-1] - len(dir_folders)])).read())
+			os.system(sys.executable + ' ' + os.path.join(current_dir, dir_files[selection[-1] - len(dir_folders)]))
+			# exec(open(os.path.join(current_dir, dir_files[selection[-1] - len(dir_folders)])).read())
 		except:
 			print(f"{Color.red}An error occured!{Color.end}")
 		input(f"{Color.red}Press any key to return{Color.end}")
