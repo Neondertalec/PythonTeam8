@@ -15,6 +15,10 @@ except:
     handle_mbox = requests.get('https://raw.githubusercontent.com/Neondertalec/PythonTeam8/main/pd6/mbox-short.txt').text
     handle_db = requests.get('https://raw.githubusercontent.com/Neondertalec/PythonTeam8/main/pd6/emails.sqlite').text
 
+def printEmail(email):
+    print(f'    Sender: {email[0]}@{email[1]}, Reciever: {email[2]}@{email[3]}, {email[4]}, Spam confidence: {email[5]}')
+
+
 if (handle_db != None and handle_mbox != None) :
     conn = sqlite3.connect(handle_db)
     cur = conn.cursor()
@@ -105,12 +109,63 @@ if (handle_db != None and handle_mbox != None) :
 
     # --END_PARSE--
 
-    #parser test
-    cur.execute('SELECT spam_prob, email_address FROM Emails LEFT JOIN Addresses ON Addresses.id = fk_sender_add') 
-    for row in cur:
-        print(row)
+    print('Unique domains:')
+    
+    cur.execute('SELECT domain_address FROM Domains')
+
+    domains = cur.fetchall()
+
+    domain_names = [d[0] for d in domains]
+
+    for name in domain_names:
+        print(f'    {name}')
+
+    domain_query = None
+
+    while domain_query == None:
+        user_in = input('Select the domain: ')
+        domain_query = user_in if user_in in domain_names else None
+
+    cur.execute('SELECT id FROM Domains WHERE domain_address = ?', (domain_query,)) 
+
+    domain_id = cur.fetchone()[0]
+
+    cur.execute('SELECT sa.email_address, sd.domain_address, ' \
+    'ra.email_address, rd.domain_address, day, spam_prob FROM Emails ' \
+    'LEFT JOIN Addresses AS sa ON sa.id = fk_sender_add ' \
+    'LEFT JOIN Domains AS sd ON sd.id = fk_sender_dom ' \
+    'LEFT JOIN Addresses AS ra ON ra.id = fk_receiver_add ' \
+    'LEFT JOIN Domains AS rd ON rd.id = fk_receiver_dom ' \
+    'LEFT JOIN Weekdays ON Weekdays.id = fk_weekday ' \
+    'WHERE fk_sender_dom = ? ', (domain_id,))
 
 
+    print(f'\n Query: {domain_query}, \n Result:')
+
+    for email in cur:
+        printEmail(email)
+
+    cur.execute('SELECT id FROM Weekdays WHERE day = ?', ('Sat',)) 
+
+    saturday_id = cur.fetchone()[0]
+
+    cur.execute('SELECT id FROM Weekdays WHERE day = ?', ('Fri',)) 
+
+    friday_id = cur.fetchone()[0]
+
+    cur.execute('SELECT sa.email_address, sd.domain_address, ' \
+    'ra.email_address, rd.domain_address, day, spam_prob FROM Emails ' \
+    'LEFT JOIN Addresses AS sa ON sa.id = fk_sender_add ' \
+    'LEFT JOIN Domains AS sd ON sd.id = fk_sender_dom ' \
+    'LEFT JOIN Addresses AS ra ON ra.id = fk_receiver_add ' \
+    'LEFT JOIN Domains AS rd ON rd.id = fk_receiver_dom ' \
+    'LEFT JOIN Weekdays ON Weekdays.id = fk_weekday ' \
+    'WHERE fk_weekday = ? OR fk_weekday = ?', (saturday_id, friday_id))
+
+    print('\n Saturday and Friday emails:')
+
+    for email in cur:
+        printEmail(email)
 
     conn.commit()#finish the program
     conn.close()
